@@ -1,0 +1,266 @@
+---
+title: "Statistical power of piecewise-regression analyses in single-case experiments addressing behaviour problems"
+author: "Jürgen Wilbert"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+# when you run into problems with the scplot github version, please install the package included in this repository
+if (!("scplot" %in% installed.packages())) 
+  devtools::install_github("jazznbass/scaledic")
+
+# if necessary, install the following cran packages ahead
+library(scan)
+library(scplot)
+library(tidyverse)
+
+source("plot_mc_function.R")
+source("plm_mc_function.R")
+source("mc_function.R")
+
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+
+create_mc <- function(filename, design, iterations, force_renew = FALSE, alpha_test = FALSE) {
+  
+  if (file.exists(filename) && !force_renew) {
+    out <- readRDS(filename)
+  } else {
+    out <- mc_scan(
+      iterations = iterations,
+      design = design,
+      method = list(plm_level = plm_mc),
+      alpha_test = alpha_test
+    )
+    saveRDS(out, filename)
+  }
+  out
+}
+
+cat_parameters <- function(iterations, design) {
+  cat("**Iterations:**  \n")
+  cat(paste(names(iterations), "=", iterations, collapse = "  \n"), "  \n")
+  cat("**Design:**  \n")
+  cat(paste(names(design), "=", design, collapse = "  \n"), "  \n")
+}
+
+```
+
+# Figure single-case parameters
+
+```{r}
+
+n2 <- 10
+x1 <- c(rep(17.5, n2), rep(7.5, n2))
+x2 <- x1 +2.5
+x3 <- x1 - 2.5
+
+case <- scdf(x1 = x1, x2 = x2, x3 = x3, 
+             dvar = "x1", phase_design = list(A = n2, B = n2))
+
+scplot(case) %>%
+  add_theme("minimal") %>%
+  set_yaxis(limits = c(-10,22), line = list(
+    arrow = arrow(ends = "last", length = unit(5, "points")))) %>%
+  set_casenames("") %>%
+  set_ylabel("Frequency\nof problem\nbehavior", angle = 0) %>%
+  set_xlabel("") %>%
+  set_phasenames(labels = c("Number of measurement times\nphase A", 
+                            "Number of measurement times\nphase B")) %>%
+  add_title("") %>%
+  set_dataline(point = list(size = 1)) %>%
+  add_dataline("x2", colour = "grey90",
+               point = list(size = 1, colour = "grey90")) %>%
+  add_dataline("x3", colour = "grey90", 
+               point = list(size = 1, colour = "grey90")) %>%
+  add_text("Strength of the\nintervention effect (level)",
+           x = n2+1, y = 11, hjust = 0, face = 3) %>%
+  add_arrow(x0 = n2+0.5, y0 = 17, x1 = n2+0.5, y1 = 7, ends = "both") %>%
+  add_arrow(x0 = 1, y0 = 22, x1 = n2, y1 = 22, ends = "both") %>%
+  add_arrow(x0 = n2+1, y0 = 22, x1 = n2*2, y1 = 22, ends = "both") %>%
+  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -4, ends = "last", 
+            color = "grey90") %>%
+  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -9, ends = "last", 
+            color = "grey90") %>%
+  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -6, ends = "last") %>%
+  add_text("Trend effect",x = 3, y = -3, hjust = 0, face = 3) %>%
+  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = 0, ends = "last",
+            color = "grey90") %>%
+  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = -2, ends = "last", 
+            color = "grey90") %>%
+  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = -1, ends = "last") %>%
+  add_text("Strength of the\nintervention effect (slope)",x = n2+1, y = 2,
+           hjust = 0, face = 3,) %>%
+  set_separator(linetype = "dashed", size = 0.2)
+
+ggsave(filename = "figure1.tiff", width = 18, height = 12,  device='tiff', units = "cm", dpi=300)
+
+
+```
+
+# Example single-cases
+
+```{r}
+
+set.seed(1231)
+
+design <- design(n = 3,
+  start_value = 15,
+  level = -(15 *0.50),
+  trend = c(-0.1 * 15 /30, 0, 0.1 * 15 /30),
+  slope = c(0.1 * 15 /20, 0, -0.1 * 15 / 20),
+  phase_design = list(A = 10, B = 20),
+  distribution = "poisson")
+dat <- random_scdf(design)
+
+scplot::scplot(dat) %>%
+  add_theme("basic") %>%
+  set_ylabel("Frequency problem behavior") %>%
+  set_yaxis(limits = c(0,30)) %>%
+  set_xaxis(increment = 2) %>%
+  add_statline("trend", color = "red") %>%
+  set_casenames(c("Example case 1", "Example case 2", "Example case 3"), position = "strip", size = 0.8) %>%
+  add_text(paste0("Trend = ", round(design$cases[[1]]$trend,2), "; slope = ",
+           round(design$cases[[1]]$slope[2], 2)), 1, 1, 2, hjust = 0, size = 0.8) %>%
+  add_text(paste0("Trend = ", round(design$cases[[2]]$trend,2), "; slope = ",
+           round(design$cases[[2]]$slope[2], 2)), 2, 1, 2, hjust = 0, size = 0.8) %>%
+  add_text(paste0("Trend = ", round(design$cases[[3]]$trend,2), "; slope = ",
+           round(design$cases[[3]]$slope[2], 2)), 3, 1, 2, hjust = 0, size = 0.8)
+
+ggsave(filename = "figure2.tiff", width = 18, height = 12,  device='tiff', units = "cm", dpi=300)
+
+
+```
+
+
+```{r}
+scplot::scplot(dat[1]) %>%
+  set_ylabel("Frequency problem behavior") %>%
+  set_yaxis(limits = c(0,25)) %>%
+  add_theme("basic") %>%
+  set_casenames(c("Example case"), size = 0.8, position = "strip") 
+```
+
+```{r}
+export(plm(dat[1], family = "poisson"))
+export(plm(dat[2], family = "poisson"))
+export(plm(dat[3], family = "poisson"))
+```
+
+
+# Length of A and B phase and intervention effectiveness 
+
+
+```{r}
+
+design <- design_template(
+    n = n_sims,
+    start_value = 15,
+    level = level_effect*15,
+    trend = rnorm(n_sims, 0, abs(0.1*15/(A_length+B_length)) ),
+    slope = rnorm(n_sims, 0, abs(0.1*15/B_length)),
+    phase_design = list(A = A_length, B = B_length),
+    distribution = "poisson"
+)
+
+iterations <- list(
+  A_length = seq(3, 20, by = 2),
+  B_length = c(10, 15, 20, 30, 40, 50),
+  level_effect = c(-0.8, -0.6, -0.4, -0.2),#c(-0.2, -0.4, -0.6, -0.8),
+  n_sims = 10000
+)
+
+out <- create_mc("phaselenght by leveleffect.rds", 
+                 design, iterations,
+                 force_renew = FALSE, alpha_test = TRUE)
+plot_mc(out, caption = FALSE, reverse = FALSE)
+
+ggsave(filename = "figure3.tiff", width = 18, height = 18,  device='tiff', units = "cm", dpi=300, scale = 1)
+
+
+```
+
+```{r results='asis'}
+cat_parameters(iterations, design)
+```
+
+# Problemintensity, intervention effectiveness, and measurements 
+
+```{r}
+design <- design_template(
+    n = n_sims,
+    start_value = problemintensity,
+    level = problemintensity*level_effect,
+    trend = rnorm(n_sims, 0, 0.1 * problemintensity/length),
+    slope = rnorm(n_sims, 0, 0.1 * problemintensity/(length * 2 /3)),
+    phase_design = list(A = length * 1/3, B = length * 2/3 ),
+    distribution = "poisson"
+)
+
+iterations <- list(
+  problemintensity = c(5, 10, 15, 20, 25, 30),
+  length = c(15,21,27,33, 39, 45),
+  level_effect = c(-0.2, -0.4, -0.6, -0.8),
+  n_sims = 10000
+)
+
+out <- create_mc("problemintensity by start_value by mts.rds", 
+                 design, iterations,
+                 force_renew = FALSE, alpha_test = TRUE)
+
+plot_mc(out, caption = FALSE,
+        var_x = 2,
+        var_shape = 3,
+        var_facet = 1, ncol = 3)
+
+ggsave(filename = "figure4.tiff", width = 18, height = 18,  device='tiff', units = "cm", dpi=300, scale = 1.1)
+
+```
+
+```{r results='asis'}
+cat_parameters(iterations, design)
+```
+
+
+# Strength of trend effect, problemintensity, and measurements
+
+```{r}
+design <- design_template(
+    n = n_sims,
+    start_value = problemintensity,
+    level = -(problemintensity*0.5),
+    trend = trend_effect*problemintensity/length,
+    slope = rnorm(n_sims, 0, abs(0.1*problemintensity/(length * 2/3))),
+    phase_design = list(A = length * 1/3, B = length * 2/3 ),
+    distribution = "poisson"
+)
+
+iterations <- list(
+  problemintensity = c(5, 10, 15, 20, 25, 30),
+  length = c(15,21,27,33, 39, 45),
+  trend_effect = c(-0.6, -0.4, 0, +0.4, +0.6),
+  n_sims = 10000
+)
+
+out <- create_mc("trend_effect by problemintensity by mts.rds", 
+                 design, iterations,
+                 force_renew = FALSE, alpha_test = TRUE)
+
+plot_mc(out, caption = FALSE,
+        var_x = 2,
+        var_shape = 3,
+        var_facet = 1, ncol = 3)
+
+ggsave(filename = "figure5.tiff", width = 18, height = 18,  device='tiff', units = "cm", dpi=300, scale = 1.1)
+```
+
+```{r results='asis'}
+cat_parameters(iterations, design)
+```
+
