@@ -254,9 +254,9 @@ iterations <- list(
   n_sims = 500
 )
 
-out <- create_mc("trend_effect by mts.rds", 
+out <- create_mc("trend_effect by mts (complete).rds", 
                  design, iterations,
-                 force_renew = TRUE, alpha_test = TRUE)
+                 force_renew = FALSE, alpha_test = TRUE)
 
 plot_mc(out, caption = FALSE)
 
