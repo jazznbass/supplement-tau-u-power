@@ -1,5 +1,5 @@
 ---
-title: "Statistical power of piecewise-regression analyses in single-case experiments addressing behaviour problems"
+title: "Tau-U power analysis"
 author: "Jürgen Wilbert"
 date: "`r Sys.Date()`"
 output:
@@ -18,7 +18,7 @@ library(scplot)
 library(tidyverse)
 
 source("plot_mc_function.R")
-source("plm_mc_function.R")
+source("mc_analysis_functions.R")
 source("mc_function.R")
 
 knitr::opts_chunk$set(
@@ -35,7 +35,12 @@ create_mc <- function(filename, design, iterations, force_renew = FALSE, alpha_t
     out <- mc_scan(
       iterations = iterations,
       design = design,
-      method = list(plm_level = plm_mc),
+      method = list(
+        "Tau-U A vs. B" = tau_u_AB,
+        "Tau-U trendA" = tau_u_trendA, 
+        "Tau-U trendA + trendB" = tau_u_trendA_trendB, 
+        "Tau-U adjusted" = tau_u_base
+      ),
       alpha_test = alpha_test
     )
     saveRDS(out, filename)
@@ -99,7 +104,7 @@ scplot(case) %>%
            hjust = 0, face = 3,) %>%
   set_separator(linetype = "dashed", size = 0.2)
 
-ggsave(filename = "figure1.tiff", width = 18, height = 12,  device='tiff', units = "cm", dpi=300)
+ggsave(filename = "figure_sc_model.png", width = 18, height = 12,  device='png', units = "cm", dpi=300)
 
 
 ```
@@ -111,29 +116,30 @@ ggsave(filename = "figure1.tiff", width = 18, height = 12,  device='tiff', units
 set.seed(1231)
 
 design <- design(n = 3,
-  start_value = 15,
-  level = -(15 *0.50),
-  trend = c(-0.1 * 15 /30, 0, 0.1 * 15 /30),
+  start_value = 50,
+  s = 10,
+  level = 2,
+  trend = c(-0.5 /30, 0, 0.5 /30),
   slope = c(0.1 * 15 /20, 0, -0.1 * 15 / 20),
   phase_design = list(A = 10, B = 20),
-  distribution = "poisson")
+  distribution = "gaussian")
 dat <- random_scdf(design)
 
 scplot::scplot(dat) %>%
   add_theme("basic") %>%
-  set_ylabel("Frequency problem behavior") %>%
-  set_yaxis(limits = c(0,30)) %>%
+  set_ylabel("Score") %>%
+  #set_yaxis(limits = c(0,30)) %>%
   set_xaxis(increment = 2) %>%
   add_statline("trend", color = "red") %>%
   set_casenames(c("Example case 1", "Example case 2", "Example case 3"), position = "strip", size = 0.8) %>%
   add_text(paste0("Trend = ", round(design$cases[[1]]$trend,2), "; slope = ",
-           round(design$cases[[1]]$slope[2], 2)), 1, 1, 2, hjust = 0, size = 0.8) %>%
+           round(design$cases[[1]]$slope[2], 2)), 1, 1, 80, hjust = 0, size = 0.8) %>%
   add_text(paste0("Trend = ", round(design$cases[[2]]$trend,2), "; slope = ",
-           round(design$cases[[2]]$slope[2], 2)), 2, 1, 2, hjust = 0, size = 0.8) %>%
+           round(design$cases[[2]]$slope[2], 2)), 2, 1, 80, hjust = 0, size = 0.8) %>%
   add_text(paste0("Trend = ", round(design$cases[[3]]$trend,2), "; slope = ",
-           round(design$cases[[3]]$slope[2], 2)), 3, 1, 2, hjust = 0, size = 0.8)
+           round(design$cases[[3]]$slope[2], 2)), 3, 1, 80, hjust = 0, size = 0.8)
 
-ggsave(filename = "figure2.tiff", width = 18, height = 12,  device='tiff', units = "cm", dpi=300)
+ggsave(filename = "figure_example_case.png", width = 18, height = 12,  device='png', units = "cm", dpi=300)
 
 
 ```
@@ -141,47 +147,47 @@ ggsave(filename = "figure2.tiff", width = 18, height = 12,  device='tiff', units
 
 ```{r}
 scplot::scplot(dat[1]) %>%
-  set_ylabel("Frequency problem behavior") %>%
-  set_yaxis(limits = c(0,25)) %>%
+  set_ylabel("Score") %>%
+  #set_yaxis(limits = c(0,25)) %>%
   add_theme("basic") %>%
   set_casenames(c("Example case"), size = 0.8, position = "strip") 
 ```
 
 ```{r}
-export(plm(dat[1], family = "poisson"))
-export(plm(dat[2], family = "poisson"))
-export(plm(dat[3], family = "poisson"))
+export(plm(dat[1]))
+export(plm(dat[2]))
+export(plm(dat[3]))
 ```
 
 
-# Length of A and B phase and intervention effectiveness 
+# Length of A and B phase
 
 
 ```{r}
 
 design <- design_template(
     n = n_sims,
-    start_value = 15,
-    level = level_effect*15,
-    trend = rnorm(n_sims, 0, abs(0.1*15/(A_length+B_length)) ),
-    slope = rnorm(n_sims, 0, abs(0.1*15/B_length)),
+    start_value = 50,
+    s = 10,
+    level = -1,
+    trend = rnorm(n_sims, 0, abs(0.1/(A_length+B_length)) ),
+    slope = rnorm(n_sims, 0, abs(0.1/B_length)),
     phase_design = list(A = A_length, B = B_length),
-    distribution = "poisson"
+    distribution = "gaussian"
 )
 
 iterations <- list(
   A_length = seq(3, 20, by = 2),
   B_length = c(10, 15, 20, 30, 40, 50),
-  level_effect = c(-0.8, -0.6, -0.4, -0.2),#c(-0.2, -0.4, -0.6, -0.8),
-  n_sims = 10000
+  n_sims = 100
 )
 
-out <- create_mc("phaselenght by leveleffect.rds", 
+out <- create_mc("phaselenght.rds", 
                  design, iterations,
-                 force_renew = FALSE, alpha_test = TRUE)
+                 force_renew = TRUE, alpha_test = TRUE)
 plot_mc(out, caption = FALSE, reverse = FALSE)
 
-ggsave(filename = "figure3.tiff", width = 18, height = 18,  device='tiff', units = "cm", dpi=300, scale = 1)
+ggsave(filename = "figure_phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
 
 ```
@@ -228,36 +234,33 @@ cat_parameters(iterations, design)
 ```
 
 
-# Strength of trend effect, problemintensity, and measurements
+# Strength of trend effect and measurement-times
 
 ```{r}
 design <- design_template(
     n = n_sims,
-    start_value = problemintensity,
-    level = -(problemintensity*0.5),
-    trend = trend_effect*problemintensity/length,
-    slope = rnorm(n_sims, 0, abs(0.1*problemintensity/(length * 2/3))),
+    start_value = 50,
+    s = 10,
+    level = 1,
+    trend = trend_effect / length,
+    slope = rnorm(n_sims, 0, abs(0.1/ (length* 2/3))),
     phase_design = list(A = length * 1/3, B = length * 2/3 ),
-    distribution = "poisson"
+    distribution = "gaussian"
 )
 
 iterations <- list(
-  problemintensity = c(5, 10, 15, 20, 25, 30),
-  length = c(15,21,27,33, 39, 45),
-  trend_effect = c(-0.6, -0.4, 0, +0.4, +0.6),
-  n_sims = 10000
+  trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
+  length = c(15, 21, 27, 33, 39, 45),
+  n_sims = 500
 )
 
-out <- create_mc("trend_effect by problemintensity by mts.rds", 
+out <- create_mc("trend_effect by mts.rds", 
                  design, iterations,
-                 force_renew = FALSE, alpha_test = TRUE)
+                 force_renew = TRUE, alpha_test = TRUE)
 
-plot_mc(out, caption = FALSE,
-        var_x = 2,
-        var_shape = 3,
-        var_facet = 1, ncol = 3)
+plot_mc(out, caption = FALSE)
 
-ggsave(filename = "figure5.tiff", width = 18, height = 18,  device='tiff', units = "cm", dpi=300, scale = 1.1)
+ggsave(filename = "figure_trend.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 ```
 
 ```{r results='asis'}

@@ -6,7 +6,7 @@ plot_mc <- function(data_mc,
                     caption = TRUE,
                     var_x = 1,
                     var_shape = 2,
-                    var_facet = 3,
+                    var_facet = "Method",
                     ncol = 2,
                     reverse = FALSE) {
 
@@ -35,13 +35,23 @@ plot_mc <- function(data_mc,
       "Initial behavior frequency" = "problemintensity"
     ) %>%
     mutate(
-      Power = sapply(data_mc, function(x) x$Power),
-      'Alpha error' = sapply(data_mc, function(x) x$`Alpha Error`)
+      PowerAB = sapply(data_mc, function(x) x$Power[1]),
+      PowertrendA = sapply(data_mc, function(x) x$Power[2]),
+      PowertrendAB = sapply(data_mc, function(x) x$Power[3]),
+      Powerbase = sapply(data_mc, function(x) x$Power[4]),
+      'AlphaAB' = sapply(data_mc, function(x) x$`Alpha Error`[1]),
+      'AlphatrendA' = sapply(data_mc, function(x) x$`Alpha Error`[2]),
+      'AlphatrendAB' = sapply(data_mc, function(x) x$`Alpha Error`[3]),
+      'Alphabase' = sapply(data_mc, function(x) x$`Alpha Error`[4])
     ) %>%
-    pivot_longer(cols = c("Alpha error", "Power"),
-                 names_to = "Statistic",
+    pivot_longer(cols = c(starts_with("Power"), starts_with("Alpha")),
+                 names_to = c("Statistic", "Method"),
+                 names_sep = 5,
                  values_to = "Percentage")
-
+  
+  #df <- df %>% filter(Statistic == "Power")
+  
+  
 
   if (is.numeric(var_x)) var_x <- names(df)[var_x]
   if (is.numeric(var_shape)) var_shape <- names(df)[var_shape]
