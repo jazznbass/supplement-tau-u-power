@@ -89,5 +89,9 @@ mc_scan <- function(design,
   attr(return_pa, "design") <- design
   attr(return_pa, "computation_duration") <- proc.time() - starttime
 
+  attr(return_pa, "iterations_table") <- sapply(return_pa, function(x) unlist(attr(x, "iter"))) %>%
+    t() %>%
+    as.data.frame()
+  
   return_pa
 }

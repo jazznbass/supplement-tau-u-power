@@ -15,6 +15,6 @@ tau_u_AB <- function(x) {
 }
 
 tau_u_base <- function(x) {
-  corrected_tau(x)$p
+  corrected_tau(x, continuity = FALSE, repeated = FALSE)$p
 }
 

@@ -35,14 +35,14 @@ plot_mc <- function(data_mc,
       "Initial behavior frequency" = "problemintensity"
     ) %>%
     mutate(
-      PowerAB = sapply(data_mc, function(x) x$Power[1]),
-      PowertrendA = sapply(data_mc, function(x) x$Power[2]),
-      PowertrendAB = sapply(data_mc, function(x) x$Power[3]),
-      Powerbase = sapply(data_mc, function(x) x$Power[4]),
-      'AlphaAB' = sapply(data_mc, function(x) x$`Alpha Error`[1]),
-      'AlphatrendA' = sapply(data_mc, function(x) x$`Alpha Error`[2]),
-      'AlphatrendAB' = sapply(data_mc, function(x) x$`Alpha Error`[3]),
-      'Alphabase' = sapply(data_mc, function(x) x$`Alpha Error`[4])
+      PowerTau_AB = sapply(data_mc, function(x) x$Power[1]),
+      PowerTau_trendA = sapply(data_mc, function(x) x$Power[2]),
+      PowerTau_trendAB = sapply(data_mc, function(x) x$Power[3]),
+      PowerTau_adj = sapply(data_mc, function(x) x$Power[4]),
+      'AlphaTau_AB' = sapply(data_mc, function(x) x$`Alpha Error`[1]),
+      'AlphaTau_trendA' = sapply(data_mc, function(x) x$`Alpha Error`[2]),
+      'AlphaTau_trendAB' = sapply(data_mc, function(x) x$`Alpha Error`[3]),
+      'AlphaTau_adj' = sapply(data_mc, function(x) x$`Alpha Error`[4])
     ) %>%
     pivot_longer(cols = c(starts_with("Power"), starts_with("Alpha")),
                  names_to = c("Statistic", "Method"),
