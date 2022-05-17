@@ -37,9 +37,11 @@ design_template <- function(...) {
 mc_scan <- function(design,
                     iterations,
                     method,
+                    parameter = "p",
                     alpha_test = TRUE,
                     power_test = TRUE,
-                    store_design = FALSE) {
+                    store_design = FALSE,
+                    ...) {
 
   starttime <- proc.time()
 
@@ -63,13 +65,14 @@ mc_scan <- function(design,
       lapply(design, function(x) eval(x, envir = mc_env))
     )
 
-    pa <- power_test(
+    pa <- mc_power_test(
       design = new_design,
       method = method,
       design_is_one_study = FALSE,
       alpha_test = alpha_test,
       power_test = power_test,
-      binom_test = FALSE
+      binom_test = FALSE,
+      ...
     )
 
     attr(pa, "iter") <- iter[i,]

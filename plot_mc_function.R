@@ -3,12 +3,16 @@
 plot_mc <- function(data_mc,
                     line_curved = FALSE,
                     add_points = TRUE,
-                    caption = TRUE,
+                    caption = FALSE,
                     var_x = 1,
                     var_shape = 2,
                     var_facet = "Method",
                     ncol = 2,
-                    reverse = FALSE) {
+                    reverse = FALSE, 
+                    marks = c(5, 80),
+                    ylim = c(0, 100),
+                    ylab = "Percentage",
+                    statistic_label = c("Alpha", "Power")) {
 
   # extract data
   df <- sapply(data_mc, function(x) unlist(attr(x, "iter"))) %>%
@@ -47,7 +51,7 @@ plot_mc <- function(data_mc,
     pivot_longer(cols = c(starts_with("Power"), starts_with("Alpha")),
                  names_to = c("Statistic", "Method"),
                  names_sep = 5,
-                 values_to = "Percentage")
+                 values_to = "y")
   
   #df <- df %>% filter(Statistic == "Power")
   
@@ -70,7 +74,7 @@ plot_mc <- function(data_mc,
     df,
     aes(
       x = !!sym(var_x),
-      y = Percentage,
+      y = y,
       color = Statistic,
       shape = !!sym(var_shape)
     )
@@ -80,11 +84,14 @@ plot_mc <- function(data_mc,
   if (!line_curved) p <- p + geom_line()
   if (add_points) p <- p + geom_point()
 
-  p <- p +
-    geom_hline(yintercept = c(5, 80), size = 0.3, colour = "grey50") +
-    ylim(0, 100) +
-    theme_bw() +
-    scale_color_brewer(palette = "Set1")
+  if (!isTRUE(is.na(marks))) 
+    p <- p + geom_hline(yintercept = marks, size = 0.3, colour = "grey50")
+  
+  if (!isTRUE(is.na(ylim))) 
+    p <- p + ylim(ylim[1], ylim[2])
+  
+  p <- p + theme_bw() +
+    scale_color_brewer(palette = "Dark2", labels = statistic_label)
 
   p <- p + scale_x_continuous(
     breaks = unique(df[[var_x]]),
@@ -98,6 +105,10 @@ plot_mc <- function(data_mc,
     p <- p + facet_wrap(var_facet, ncol = ncol,labeller = .label_both)
   }
 
+  p <- p + ylab(ylab)
+  
+  #p <- p + scale_color_manual(labels = statistic_label, values = c("red", "blue")) 
+  
   if (isTRUE(caption)) {
     design <- attr(data_mc, "design")
     design <- paste0(names(design), " = ", design, collapse = "\n")
