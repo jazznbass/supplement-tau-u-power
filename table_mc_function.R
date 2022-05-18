@@ -4,7 +4,8 @@ table_mc <- function(data_mc,
                     caption = TRUE,
                     reference_category = 0,
                     first = 1, 
-                    second = 2) {
+                    second = 2, 
+                    digits = 0) {
 
   # extract data
   df <- sapply(data_mc, function(x) unlist(attr(x, "iter"))) %>%
@@ -49,6 +50,8 @@ table_mc <- function(data_mc,
 
   if (reference_category == 0) {
     
+    df[, 3:14] <- round(df[, 3:14], digits)
+    
     for(i in 11:14)
       df[[i]] = cell_spec(
         df[[i]], 
@@ -76,9 +79,9 @@ table_mc <- function(data_mc,
 
   if (reference_category == 1) {
     
-    for(i in 4:6) df[[i]] <- round(df[[i]] - df[[2+reference_category]], 1)
-    for(i in 8:10) df[[i]] <- round(df[[i]] - df[[6+reference_category]], 1)
-    for(i in 12:14) df[[i]] <- round(df[[i]] - df[[10+reference_category]], 1)
+    for(i in 4:6) df[[i]] <- round(df[[i]] - df[[2+reference_category]], digits)
+    for(i in 8:10) df[[i]] <- round(df[[i]] - df[[6+reference_category]], digits)
+    for(i in 12:14) df[[i]] <- round(df[[i]] - df[[10+reference_category]], digits)
     
     for(i in c(4:6, 12:14))
       df[[i]] = cell_spec(

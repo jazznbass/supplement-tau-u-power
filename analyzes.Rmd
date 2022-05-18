@@ -208,7 +208,7 @@ out <- create_mc("phaselength.rds",
                  eval = "p",
                  force_renew = FALSE, alpha_test = TRUE)
 
-plot_mc(out, caption = FALSE, reverse = FALSE)
+plot_mc(out)
 
 ggsave(filename = "figure_phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
@@ -241,7 +241,7 @@ iterations <- list(
 
 out <- create_mc("phaselength_tau.rds", 
                  design, iterations,
-                 force_renew = TRUE, alpha_test = TRUE,
+                 force_renew = FALSE, alpha_test = TRUE,
                  eval = "es")
 
 plot_mc(out, caption = FALSE, reverse = FALSE, ylim = NA, marks = 0, ylab = "Tau",
@@ -288,7 +288,7 @@ iterations <- list(
 out <- create_mc("interventioneffect_length.rds", 
                  design, iterations, eval = "p",
                  force_renew = FALSE, alpha_test = TRUE)
-plot_mc(out)
+plot_mc(out,var_x = 2, var_shape = 1)
 
 ggsave(filename = "figure_interventioneffect.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
@@ -316,7 +316,7 @@ design <- design_template(
 iterations <- list(
   level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
   length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 200
+  n_sims = 2000
 )
 
 out <- create_mc("interventioneffect_length_tau.rds", 
@@ -324,6 +324,7 @@ out <- create_mc("interventioneffect_length_tau.rds",
                  force_renew = FALSE, alpha_test = TRUE)
 
 plot_mc(out, ylim = NA, marks = 0, ylab = "Tau",
+        var_x = 2, var_shape = 1,
         statistic_label = c("No effect", "Effect"))
 
 ggsave(filename = "figure_interventioneffect_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
@@ -361,14 +362,14 @@ design <- design_template(
 iterations <- list(
   trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
   length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 200
+  n_sims = 2000
 )
 
 out <- create_mc("trend.rds", 
                  design, iterations, eval = "p",
                  force_renew = FALSE, alpha_test = TRUE)
 
-plot_mc(out)
+plot_mc(out, var_x = 2, var_shape = 1)
 
 ggsave(filename = "figure_trend.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
@@ -403,6 +404,7 @@ out <- create_mc("trend_tau.rds",
                  force_renew = FALSE, alpha_test = TRUE)
 
 plot_mc(out, ylim = NA, marks = 0, ylab = "Tau",
+        var_x = 2, var_shape = 1,
         statistic_label = c("No effect", "Effect"))
 
 ggsave(filename = "figure_trend_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
