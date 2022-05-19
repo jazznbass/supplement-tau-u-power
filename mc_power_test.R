@@ -4,19 +4,25 @@ mc_power_test <- function(design,
                        effect = "level",
                        n_sim = 100,
                        design_is_one_study = TRUE,
-                       eval_function = "mean(x <= alpha_level, na.rm = TRUE) * 100",
+                       eval_function = "perc_sig",
+                       alpha_beta = TRUE,
+                       correct = TRUE,
                        alpha_test = TRUE,
                        power_test = TRUE,
                        binom_test = 0.5,
-                       alpha_level = 0.05) {
+                       alpha_level = 0.05,
+                       labels = c("Power", "Alpha Error")) {
   
   
   starttime <- proc.time()
   
+  if (identical(eval_function, "perc_sig")) eval_function <- mc_perc_sig
+  if (identical(eval_function, "mean")) eval_function <- mc_mean
+  
   mc_fun <- unlist(
     lapply(
       method, 
-      function(x) if (inherits(x, "character")) mc_function(x) else x
+      function(x) if (inherits(x, "character")) scan:::mc_function(x) else x
     ),
     recursive = FALSE
   )
@@ -27,12 +33,14 @@ mc_power_test <- function(design,
   # power calculation ----------
   
   if (power_test) {
-    out$Power <- .mc_scdf(
+    mc_tab <- .mc_scdf(
       design = design, n_sim = n_sim, 
       alpha_level = alpha_level, mc_fun = mc_fun, 
       design_is_one_study = design_is_one_study,
       eval_function = eval_function
-    ) 
+    )
+    if (nrow(mc_tab) > 1) mc_tab <- t(mc_tab)
+    out <- cbind(out, mc_tab)
   } else out$Power <- NA
   
   # alpha error calculation ----------
@@ -57,18 +65,25 @@ mc_power_test <- function(design,
       )
     }
     
-    out$"Alpha Error" <- .mc_scdf(
+    mc_tab <- .mc_scdf(
       design = design_no_effect, n_sim = n_sim, 
       alpha_level = alpha_level, mc_fun = mc_fun, 
       design_is_one_study = design_is_one_study,
       eval_function = eval_function
     )
+    if (nrow(mc_tab) > 1) mc_tab <- t(mc_tab)
+    out <- cbind(out, mc_tab)
   } else out$"Alpha Error" <- NA
   
-  out$"Alpha:Beta" <- sprintf("1:%.1f", (100 - out$Power) / out$Alpha)
-  out$Correct <- (out$Power + (100 - out$"Alpha Error")) / 2
+  if(!identical(labels, NA)) names(out)[2:(length(labels) + 1)] <- labels
   
-  if (!isFALSE(binom_test)) {
+  if (alpha_beta)
+    out$"Alpha:Beta" <- sprintf("1:%.1f", (100 - out$Power) / out$"Alpha Error")
+  
+  if (correct)
+    out$Correct <- (out$Power + (100 - out$"Alpha Error")) / 2
+  
+  if (!isFALSE(binom_test) && !isFALSE(correct)) {
     b_test <- function(x) {
       x <- binom.test(round(x / 100 * n_sim * 2), n_sim * 2, p = binom_test)
       round(x$p.value, 3)
@@ -105,8 +120,7 @@ mc_power_test <- function(design,
   
   test_function <- function(func) {
     x <- sapply(rand_sample, func)
-    #mean(x <= alpha_level, na.rm = TRUE) * 100
-    eval(str2expression(eval_function))
+    do.call(eval_function, list(x))
   }
   out <-  sapply(mc_fun, test_function) 
   
