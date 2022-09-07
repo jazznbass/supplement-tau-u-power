@@ -18,12 +18,13 @@ library(scplot)
 library(tidyverse)
 library(knitr)
 library(kableExtra)
+library(mcscan)
 
-source("plot_mc_function.R")
-source("table_mc_function.R")
-source("mc_analysis_functions.R")
-source("mc_function.R")
-source("mc_power_test.R")
+#source("plot_mc_function.R")
+#source("table_mc_function.R")
+#source("mc_analysis_functions.R")
+#source("mc_function.R")
+#source("mc_power_test.R")
 
 knitr::opts_chunk$set(
 	echo = FALSE,
@@ -31,37 +32,45 @@ knitr::opts_chunk$set(
 	warning = FALSE
 )
 
-create_mc <- function(filename, design, iterations, force_renew = FALSE, 
-                      alpha_test = FALSE,
-                      eval) {
+methods_p <- list(
+  "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
+  "Tau-U trendA" = get_mcfn("tau_u_trendA"), 
+  "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB"), 
+  "Tau-U adjusted" = get_mcfn("tau_u_base")
+)
+
+methods_es <- list(
+  "Tau-U A vs. B" = get_mcfn("tau_u_AB_es"),
+  "Tau-U trendA" = get_mcfn("tau_u_trendA_es"), 
+  "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB_es"), 
+  "Tau-U adjusted" = get_mcfn("tau_u_base_es")
+)
+
+
+create_mc <- function(filename, 
+                      design, 
+                      iterations, 
+                      force_renew = FALSE,
+                      eval, ...) {
   
   if (eval == "p") {
-    eval_function <- "mean(x <= alpha_level, na.rm = TRUE) * 100"
-    methods <- list(
-        "Tau-U A vs. B" = tau_u_AB,
-        "Tau-U trendA" = tau_u_trendA, 
-        "Tau-U trendA + trendB" = tau_u_trendA_trendB, 
-        "Tau-U adjusted" = tau_u_base
-      )
+    eval_function <- get_mcfn("perc_sig")
+    methods <- methods_p
   }
   if (eval == "es") {
-    eval_function <- "mean(x, na.rm = TRUE)"
-    methods <- list(
-        "Tau-U A vs. B" = tau_u_AB_es,
-        "Tau-U trendA" = tau_u_trendA_es, 
-        "Tau-U trendA + trendB" = tau_u_trendA_trendB_es, 
-        "Tau-U adjusted" = tau_u_base_es
-      )
+    eval_function <- get_mcfn("mean")
+    methods <- methods_es
   }
+  
   if (file.exists(filename) && !force_renew) {
     out <- readRDS(filename)
   } else {
-    out <- mc_scan(
-      iterations = iterations,
+    out <- mcstudy(
       design = design,
-      method = methods,
-      alpha_test = alpha_test,
-      eval_function = eval_function
+      iterations = iterations,
+      methods = methods,
+      eval_function = eval_function,
+      ...
     )
     saveRDS(out, filename)
   }
@@ -77,107 +86,10 @@ cat_parameters <- function(iterations, design) {
 
 ```
 
-# Figure single-case parameters
 
-```{r}
+# Research question
 
-n2 <- 10
-x1 <- c(rep(17.5, n2), rep(7.5, n2))
-x2 <- x1 +2.5
-x3 <- x1 - 2.5
-
-case <- scdf(x1 = x1, x2 = x2, x3 = x3, 
-             dvar = "x1", phase_design = list(A = n2, B = n2))
-
-scplot(case) %>%
-  add_theme("minimal") %>%
-  set_yaxis(limits = c(-10,22), line = list(
-    arrow = arrow(ends = "last", length = unit(5, "points")))) %>%
-  set_casenames("") %>%
-  set_ylabel("Frequency\nof problem\nbehavior", angle = 0) %>%
-  set_xlabel("") %>%
-  set_phasenames(labels = c("Number of measurement times\nphase A", 
-                            "Number of measurement times\nphase B")) %>%
-  add_title("") %>%
-  set_dataline(point = list(size = 1)) %>%
-  add_dataline("x2", colour = "grey90",
-               point = list(size = 1, colour = "grey90")) %>%
-  add_dataline("x3", colour = "grey90", 
-               point = list(size = 1, colour = "grey90")) %>%
-  add_text("Strength of the\nintervention effect (level)",
-           x = n2+1, y = 11, hjust = 0, face = 3) %>%
-  add_arrow(x0 = n2+0.5, y0 = 17, x1 = n2+0.5, y1 = 7, ends = "both") %>%
-  add_arrow(x0 = 1, y0 = 22, x1 = n2, y1 = 22, ends = "both") %>%
-  add_arrow(x0 = n2+1, y0 = 22, x1 = n2*2, y1 = 22, ends = "both") %>%
-  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -4, ends = "last", 
-            color = "grey90") %>%
-  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -9, ends = "last", 
-            color = "grey90") %>%
-  add_arrow(x0 = 1, y0 = -6, x1 = n2*2, y1 = -6, ends = "last") %>%
-  add_text("Trend effect",x = 3, y = -3, hjust = 0, face = 3) %>%
-  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = 0, ends = "last",
-            color = "grey90") %>%
-  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = -2, ends = "last", 
-            color = "grey90") %>%
-  add_arrow(x0 = n2+1, y0 = -1, x1 = n2*2, y1 = -1, ends = "last") %>%
-  add_text("Strength of the\nintervention effect (slope)",x = n2+1, y = 2,
-           hjust = 0, face = 3,) %>%
-  set_separator(linetype = "dashed", size = 0.2)
-
-ggsave(filename = "figure_sc_model.png", width = 18, height = 12,  device='png', units = "cm", dpi=300)
-
-
-```
-
-# Example single-cases
-
-```{r}
-
-set.seed(1231)
-
-design <- design(n = 3,
-  start_value = 50,
-  s = 10,
-  level = 2,
-  trend = c(-0.5 /30, 0, 0.5 /30),
-  slope = c(0.1 * 15 /20, 0, -0.1 * 15 / 20),
-  phase_design = list(A = 10, B = 20),
-  distribution = "gaussian")
-dat <- random_scdf(design)
-
-scplot::scplot(dat) %>%
-  add_theme("basic") %>%
-  set_ylabel("Score") %>%
-  #set_yaxis(limits = c(0,30)) %>%
-  set_xaxis(increment = 2) %>%
-  add_statline("trend", color = "red") %>%
-  set_casenames(c("Example case 1", "Example case 2", "Example case 3"), position = "strip", size = 0.8) %>%
-  add_text(paste0("Trend = ", round(design$cases[[1]]$trend,2), "; slope = ",
-           round(design$cases[[1]]$slope[2], 2)), 1, 1, 80, hjust = 0, size = 0.8) %>%
-  add_text(paste0("Trend = ", round(design$cases[[2]]$trend,2), "; slope = ",
-           round(design$cases[[2]]$slope[2], 2)), 2, 1, 80, hjust = 0, size = 0.8) %>%
-  add_text(paste0("Trend = ", round(design$cases[[3]]$trend,2), "; slope = ",
-           round(design$cases[[3]]$slope[2], 2)), 3, 1, 80, hjust = 0, size = 0.8)
-
-ggsave(filename = "figure_example_case.png", width = 18, height = 12,  device='png', units = "cm", dpi=300)
-
-
-```
-
-
-```{r}
-scplot::scplot(dat[1]) %>%
-  set_ylabel("Score") %>%
-  #set_yaxis(limits = c(0,25)) %>%
-  add_theme("basic") %>%
-  set_casenames(c("Example case"), size = 0.8, position = "strip") 
-```
-
-```{r}
-export(plm(dat[1]))
-export(plm(dat[2]))
-export(plm(dat[3]))
-```
+Q: How strong does a data trend influence the effect-size estimation and power of various tau-u analyzing methods?
 
 
 # Length of A and B phase
@@ -187,72 +99,45 @@ export(plm(dat[3]))
 ```{r}
 
 design <- design_template(
-    n = n_sims,
-    start_value = 50,
-    s = 10,
-    level = 1,
-    trend = rnorm(n_sims, 0, abs(0.1/(A_length+B_length)) ),
-    slope = rnorm(n_sims, 0, abs(0.1/B_length)),
-    phase_design = list(A = A_length, B = B_length),
-    distribution = "gaussian"
+  n = n_sims,
+  start_value = 50,
+  s = 10,
+  level = level_effect,
+  trend = rnorm(n_sims, 0, abs(0.1 / (A_length + B_length))),
+  slope = rnorm(n_sims, 0, abs(0.1 / B_length)),
+  phase_design = list(A = A_length, B = B_length),
+  distribution = "gaussian"
 )
 
-iterations <- list(
+iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
   B_length = c(10, 15, 20, 30, 40, 50),
-  n_sims = 2000
+  level_effect = c(0, 1),
+  n_sims = 10
 )
 
 out <- create_mc("phaselength.rds", 
                  design, iterations, 
                  eval = "p",
-                 force_renew = FALSE, alpha_test = TRUE)
+                 force_renew = TRUE)
 
-plot_mc(out)
+mcplot(out, template = "power")
 
 ggsave(filename = "figure_phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-table_mc(out)
-table_mc(out, reference_category = 1)
-
+#mctable(out)
 
 ```
 
 ## Mean Tau
 
 ```{r}
-
-design <- design_template(
-    n = n_sims,
-    start_value = 50,
-    s = 10,
-    level = 1,
-    trend = rnorm(n_sims, 0, abs(0.1/(A_length+B_length)) ),
-    slope = rnorm(n_sims, 0, abs(0.1/B_length)),
-    phase_design = list(A = A_length, B = B_length),
-    distribution = "gaussian"
-)
-
-iterations <- list(
-  A_length = seq(3, 20, by = 2),
-  B_length = c(10, 15, 20, 30, 40, 50),
-  n_sims = 2000
-)
-
 out <- create_mc("phaselength_tau.rds", 
                  design, iterations,
-                 force_renew = FALSE, alpha_test = TRUE,
+                 force_renew = TRUE,
                  eval = "es")
 
-plot_mc(out, caption = FALSE, reverse = FALSE, ylim = NA, marks = 0, ylab = "Tau",
-        statistic_label = c("No effect", "Effect"))
-
-ggsave(filename = "figure_phaselength_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
-
-table_mc_tau(out)
-table_mc_tau(out, reference_category = 1)
-
-
+mcplot(out)
 ```
 
 ## Parameters
@@ -279,58 +164,33 @@ design <- design_template(
     distribution = "gaussian"
 )
 
-iterations <- list(
-  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
+iterations <- iterations_template(
+  level_effect = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5),
   length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 2000
+  n_sims = 10
 )
 
 out <- create_mc("interventioneffect_length.rds", 
                  design, iterations, eval = "p",
-                 force_renew = FALSE, alpha_test = TRUE)
-plot_mc(out,var_x = 2, var_shape = 1)
+                 force_renew = TRUE)
+
+mcplot(out, var_x = 2, var_shape = 1, template = "power")
 
 ggsave(filename = "figure_interventioneffect.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
-
-table_mc(out)
-table_mc(out, reference_category = 1)
-
 
 ```
 
 ## Mean Tau-U
 
 ```{r}
-
-design <- design_template(
-    n = n_sims,
-    start_value = 50,
-    s = 10,
-    level = level_effect,
-    trend = rnorm(n_sims, 0, 0.1 / length),
-    slope = rnorm(n_sims, 0, 0.1 / (length * 2/3)),
-    phase_design = list(A = length * 1/3, B = length * 2/3),
-    distribution = "gaussian"
-)
-
-iterations <- list(
-  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
-  length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 2000
-)
-
 out <- create_mc("interventioneffect_length_tau.rds", 
                  design, iterations, eval = "es",
-                 force_renew = FALSE, alpha_test = TRUE)
+                 force_renew = TRUE)
 
-plot_mc(out, ylim = NA, marks = 0, ylab = "Tau",
-        var_x = 2, var_shape = 1,
-        statistic_label = c("No effect", "Effect"))
+mcplot(out, var_x = 2, var_shape = 1)
 
 ggsave(filename = "figure_interventioneffect_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-table_mc_tau(out)
-table_mc_tau(out, reference_category = 1)
 
 
 ```
@@ -352,26 +212,81 @@ design <- design_template(
     n = n_sims,
     start_value = 50,
     s = 10,
-    level = 1,
+    level = level_effect,
     trend = trend_effect / length,
     slope = rnorm(n_sims, 0, abs(0.1/ (length* 2/3))),
     phase_design = list(A = length * 1/3, B = length * 2/3 ),
     distribution = "gaussian"
 )
 
-iterations <- list(
+iterations <- iterations_template(
   trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
-  length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 2000
+  length = c(15, 30, 45),
+  level_effect = c(0, 0.5, 1, 1.5),#c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5),
+  n_sims = 100
 )
 
 out <- create_mc("trend.rds", 
+                 design, iterations, eval = "p",
+                 force_renew = TRUE)
+
+mcplot(out, var_x = 1, var_shape = 2)
+
+ggsave(filename = "figure_trend.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+
+
+```
+
+## Mean Tau-U
+
+```{r}
+out <- create_mc("trend_length_tau.rds", 
+                 design, iterations, eval = "es",
+                 force_renew = TRUE)
+
+mcplot(out, var_x = 1, var_shape = 2)
+
+ggsave(filename = "figure_trend_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+
+```
+
+
+## Parameters
+
+```{r results='asis'}
+cat_parameters(iterations, design)
+```
+
+
+# Strength of trend effect and level-effect
+
+## Percentage significant
+
+```{r}
+design <- design_template(
+    n = n_sims,
+    start_value = 50,
+    s = 10,
+    level = level_effect,
+    trend = trend_effect / 15,
+    slope = rnorm(n_sims, 0, abs(0.1/ (10))),
+    phase_design = list(A = 5, B = 10 ),
+    distribution = "gaussian"
+)
+
+iterations <- list(
+  trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
+  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
+  n_sims = 20
+)
+
+out <- create_mc("trend_level.rds", 
                  design, iterations, eval = "p",
                  force_renew = FALSE, alpha_test = TRUE)
 
 plot_mc(out, var_x = 2, var_shape = 1)
 
-ggsave(filename = "figure_trend.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+ggsave(filename = "figure_trend_level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
 
 table_mc(out, reference_category = 0, first = 1, second = 2)
@@ -421,3 +336,4 @@ table_mc_tau(out, reference_category = 1, first = 1, second = 2)
 ```{r results='asis'}
 cat_parameters(iterations, design)
 ```
+
