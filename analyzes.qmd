@@ -2,9 +2,17 @@
 title: "Tau-U power analysis"
 author: "Jürgen Wilbert"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    df_print: paged
+format:
+  html:
+    df-print: paged
+    output-file: index.html
+    toc: true
+    toc-location: left
+    self-contained: true
+comments:
+  hypothesis: true
+execute: 
+  freeze: true
 ---
 
 ```{r setup, include = FALSE}
@@ -14,17 +22,7 @@ if (!("scplot" %in% installed.packages()))
 
 # if necessary, install the following cran packages ahead
 library(scan)
-library(scplot)
-library(tidyverse)
-library(knitr)
-library(kableExtra)
 library(mcscan)
-
-#source("plot_mc_function.R")
-#source("table_mc_function.R")
-#source("mc_analysis_functions.R")
-#source("mc_function.R")
-#source("mc_power_test.R")
 
 knitr::opts_chunk$set(
 	echo = FALSE,
@@ -94,15 +92,17 @@ Q: How strong does a data trend influence the effect-size estimation and power o
 
 # Length of A and B phase
 
+::: panel-tabset
+
 ## Percentage significant
 
-```{r}
+```{r cache=TRUE}
 
 design <- design_template(
   n = n_sims,
   start_value = 50,
   s = 10,
-  level = level_effect,
+  level = 1 * statistic,
   trend = rnorm(n_sims, 0, abs(0.1 / (A_length + B_length))),
   slope = rnorm(n_sims, 0, abs(0.1 / B_length)),
   phase_design = list(A = A_length, B = B_length),
@@ -112,32 +112,36 @@ design <- design_template(
 iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
   B_length = c(10, 15, 20, 30, 40, 50),
-  level_effect = c(0, 1),
-  n_sims = 10
+  statistic = c(0, 1),
+  n_sims = 500
 )
 
 out <- create_mc("phaselength.rds", 
                  design, iterations, 
                  eval = "p",
-                 force_renew = TRUE)
+                 force_renew = FALSE)
 
 mcplot(out, template = "power")
 
-ggsave(filename = "figure_phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
+ggsave(filename = "figure-phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-#mctable(out)
+mctable(out, wider = "statistic") %>% round(1)
 
 ```
 
 ## Mean Tau
 
 ```{r}
-out <- create_mc("phaselength_tau.rds", 
+out <- create_mc("phaselength-tau.rds", 
                  design, iterations,
-                 force_renew = TRUE,
+                 force_renew = FALSE,
                  eval = "es")
 
 mcplot(out)
+ggsave(filename = "figure-phaselength-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
+
+mctable(out, wider = "statistic") %>% round(2)
+
 ```
 
 ## Parameters
@@ -145,8 +149,11 @@ mcplot(out)
 ```{r results='asis'}
 cat_parameters(iterations, design)
 ```
+:::
 
 # Intervention strength
+
+::: panel-tabset
 
 ## Percentage significant
 
@@ -157,7 +164,7 @@ design <- design_template(
     n = n_sims,
     start_value = 50,
     s = 10,
-    level = level_effect,
+    level = level_effect * statistic,
     trend = rnorm(n_sims, 0, 0.1 / length),
     slope = rnorm(n_sims, 0, 0.1 / (length * 2/3)),
     phase_design = list(A = length * 1/3, B = length * 2/3),
@@ -165,36 +172,38 @@ design <- design_template(
 )
 
 iterations <- iterations_template(
-  level_effect = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5),
+  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
   length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 10
+  statistic = c(0,1),
+  n_sims = 1000
 )
 
-out <- create_mc("interventioneffect_length.rds", 
+out <- create_mc("interventioneffect-length.rds", 
                  design, iterations, eval = "p",
-                 force_renew = TRUE)
+                 force_renew = FALSE)
 
 mcplot(out, var_x = 2, var_shape = 1, template = "power")
 
-ggsave(filename = "figure_interventioneffect.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
+ggsave(filename = "figure-interventioneffect.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
+
+mctable(out, wider = "statistic") %>% round(1)
 
 ```
 
 ## Mean Tau-U
 
 ```{r}
-out <- create_mc("interventioneffect_length_tau.rds", 
+out <- create_mc("interventioneffect-length-tau.rds", 
                  design, iterations, eval = "es",
-                 force_renew = TRUE)
+                 force_renew = FALSE)
 
 mcplot(out, var_x = 2, var_shape = 1)
 
-ggsave(filename = "figure_interventioneffect_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
+ggsave(filename = "figure-interventioneffect-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-
+mctable(out, wider = "statistic") %>% round(2)
 
 ```
-
 
 ## Parameters
 
@@ -202,8 +211,11 @@ ggsave(filename = "figure_interventioneffect_tau.png", width = 18, height = 18, 
 cat_parameters(iterations, design)
 ```
 
+:::
 
-# Strength of trend effect and measurement-times
+# Strength of trend effect and level-effect
+
+::: panel-tabset
 
 ## Percentage significant
 
@@ -212,7 +224,7 @@ design <- design_template(
     n = n_sims,
     start_value = 50,
     s = 10,
-    level = level_effect,
+    level = level_effect * statistic,
     trend = trend_effect / length,
     slope = rnorm(n_sims, 0, abs(0.1/ (length* 2/3))),
     phase_design = list(A = length * 1/3, B = length * 2/3 ),
@@ -221,33 +233,35 @@ design <- design_template(
 
 iterations <- iterations_template(
   trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
-  length = c(15, 30, 45),
-  level_effect = c(0, 0.5, 1, 1.5),#c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5),
-  n_sims = 100
+  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
+  statistic = c(0, 1),
+  length = 15,
+  n_sims = 1000
 )
 
-out <- create_mc("trend.rds", 
+out <- create_mc("trend-level.rds", 
                  design, iterations, eval = "p",
-                 force_renew = TRUE)
+                 force_renew = FALSE)
 
-mcplot(out, var_x = 1, var_shape = 2)
+mcplot(out, var_x = 1, var_shape = 2, template = "power")
 
-ggsave(filename = "figure_trend.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+ggsave(filename = "figure-trend-level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-
+mctable(out, wider = "statistic") %>% round(1)
 ```
 
 ## Mean Tau-U
 
 ```{r}
-out <- create_mc("trend_length_tau.rds", 
+out <- create_mc("trend-level-tau.rds", 
                  design, iterations, eval = "es",
-                 force_renew = TRUE)
+                 force_renew = FALSE)
 
 mcplot(out, var_x = 1, var_shape = 2)
 
-ggsave(filename = "figure_trend_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+ggsave(filename = "figure-trend-level-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
+mctable(out, wider = "statistic") %>% round(2)
 ```
 
 
@@ -257,8 +271,11 @@ ggsave(filename = "figure_trend_tau.png", width = 18, height = 18,  device='png'
 cat_parameters(iterations, design)
 ```
 
+:::
 
-# Strength of trend effect and level-effect
+# Strength of trend effect and meassurement times
+
+::: panel-tabset
 
 ## Percentage significant
 
@@ -267,69 +284,46 @@ design <- design_template(
     n = n_sims,
     start_value = 50,
     s = 10,
-    level = level_effect,
-    trend = trend_effect / 15,
-    slope = rnorm(n_sims, 0, abs(0.1/ (10))),
-    phase_design = list(A = 5, B = 10 ),
-    distribution = "gaussian"
-)
-
-iterations <- list(
-  trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
-  level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
-  n_sims = 20
-)
-
-out <- create_mc("trend_level.rds", 
-                 design, iterations, eval = "p",
-                 force_renew = FALSE, alpha_test = TRUE)
-
-plot_mc(out, var_x = 2, var_shape = 1)
-
-ggsave(filename = "figure_trend_level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
-
-
-table_mc(out, reference_category = 0, first = 1, second = 2)
-table_mc(out, reference_category = 1, first = 1, second = 2)
-
-```
-
-## Mean Tau-U
-
-```{r}
-design <- design_template(
-    n = n_sims,
-    start_value = 50,
-    s = 10,
-    level = 1,
+    level = level_effect * statistic,
     trend = trend_effect / length,
-    slope = rnorm(n_sims, 0, abs(0.1/ (length* 2/3))),
-    phase_design = list(A = length * 1/3, B = length * 2/3 ),
+    slope = rnorm(n_sims, 0, 0.1 / (length * 2/3)),
+    phase_design = list(A = length * 1/3, B = length * 2/3),
     distribution = "gaussian"
 )
 
 iterations <- list(
   trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
   length = c(15, 21, 27, 33, 39, 45),
-  n_sims = 200
+  statistic = c(0,1),
+  level_effect = 1,
+  n_sims = 1000
 )
 
-out <- create_mc("trend_tau.rds", 
-                 design, iterations, eval = "es",
-                 force_renew = FALSE, alpha_test = TRUE)
+out <- create_mc("trend-length.rds", 
+                 design, iterations, eval = "p",
+                 force_renew = FALSE)
 
-plot_mc(out, ylim = NA, marks = 0, ylab = "Tau",
-        var_x = 2, var_shape = 1,
-        statistic_label = c("No effect", "Effect"))
+mcplot(out, var_x = 1, var_shape = 2, template = "power")
 
-ggsave(filename = "figure_trend_tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+ggsave(filename = "figure-trend-length.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-
-table_mc_tau(out, reference_category = 0, first = 1, second = 2)
-table_mc_tau(out, reference_category = 1, first = 1, second = 2)
+mctable(out, wider = "statistic") %>% round(1)
 
 ```
 
+## Mean Tau-U
+
+```{r}
+out <- create_mc("trend-length-tau.rds", 
+                 design, iterations, eval = "es",
+                 force_renew = FALSE)
+
+mcplot(out, var_x = 1, var_shape = 2)
+
+ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+
+mctable(out, wider = "statistic") %>% round(2)
+```
 
 ## Parameters
 
@@ -337,3 +331,4 @@ table_mc_tau(out, reference_category = 1, first = 1, second = 2)
 cat_parameters(iterations, design)
 ```
 
+:::
