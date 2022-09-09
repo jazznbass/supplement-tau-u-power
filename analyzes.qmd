@@ -96,7 +96,7 @@ Q: How strong does a data trend influence the effect-size estimation and power o
 
 ## Percentage significant
 
-```{r cache=TRUE}
+```{r}
 
 design <- design_template(
   n = n_sims,
