@@ -4,31 +4,34 @@ author: "Jürgen Wilbert"
 date: "`r Sys.Date()`"
 format:
   html:
-    df-print: paged
+    df-print: kable
     output-file: index.html
     toc: true
     toc-location: left
     self-contained: true
+    code-fold: true
 comments:
   hypothesis: true
 execute: 
   freeze: true
+  warning: false
+  error: false
 ---
 
-```{r setup, include = FALSE}
-# when you run into problems with the scplot github version, please install the package included in this repository
-if (!("scplot" %in% installed.packages())) 
-  devtools::install_github("jazznbass/scaledic")
+```{r}
+#| include: false
+#| label: setup
+
+# when you run into problems with the scplot/mcscan github version, please install the package included in this repository
+#if (!("scplot" %in% installed.packages())) 
+#  devtools::install_github("jazznbass/scaledic")
+if (!("mcscan" %in% installed.packages())) 
+  devtools::install_github("jazznbass/mcscan")
+
+library(mcscan)
 
 # if necessary, install the following cran packages ahead
 library(scan)
-library(mcscan)
-
-knitr::opts_chunk$set(
-	echo = FALSE,
-	message = FALSE,
-	warning = FALSE
-)
 
 methods_p <- list(
   "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
@@ -43,7 +46,6 @@ methods_es <- list(
   "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB_es"), 
   "Tau-U adjusted" = get_mcfn("tau_u_base_es")
 )
-
 
 create_mc <- function(filename, 
                       design, 
@@ -84,7 +86,6 @@ cat_parameters <- function(iterations, design) {
 
 ```
 
-
 # Research question
 
 Q: How strong does a data trend influence the effect-size estimation and power of various tau-u analyzing methods?
@@ -94,7 +95,7 @@ Q: How strong does a data trend influence the effect-size estimation and power o
 
 ::: panel-tabset
 
-## Percentage significant
+## Power plot
 
 ```{r}
 
@@ -124,12 +125,15 @@ out <- create_mc("phaselength.rds",
 mcplot(out, template = "power")
 
 ggsave(filename = "figure-phaselength.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
-
-mctable(out, wider = "statistic") %>% round(1)
-
 ```
 
-## Mean Tau
+## Power table
+
+```{r}
+mctable(out, wider = "statistic", format = "html", digits = 0)
+```
+
+## Tau plot
 
 ```{r}
 out <- create_mc("phaselength-tau.rds", 
@@ -140,23 +144,21 @@ out <- create_mc("phaselength-tau.rds",
 mcplot(out)
 ggsave(filename = "figure-phaselength-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-mctable(out, wider = "statistic") %>% round(2)
-
 ```
 
-## Parameters
+## Tau table
 
-```{r results='asis'}
-cat_parameters(iterations, design)
+```{r}
+mctable(out, wider = "statistic", format = "html")
 ```
+
 :::
 
 # Intervention strength
 
 ::: panel-tabset
 
-## Percentage significant
-
+## power plot
 
 ```{r}
 
@@ -186,11 +188,16 @@ mcplot(out, var_x = 2, var_shape = 1, template = "power")
 
 ggsave(filename = "figure-interventioneffect.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-mctable(out, wider = "statistic") %>% round(1)
-
 ```
 
-## Mean Tau-U
+## power table
+
+```{r}
+mctable(out, wider = "statistic", format = "html", digits = 0)
+```
+
+
+## Tau plot
 
 ```{r}
 out <- create_mc("interventioneffect-length-tau.rds", 
@@ -201,15 +208,16 @@ mcplot(out, var_x = 2, var_shape = 1)
 
 ggsave(filename = "figure-interventioneffect-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
 
-mctable(out, wider = "statistic") %>% round(2)
+
 
 ```
 
-## Parameters
+## Tau table
 
-```{r results='asis'}
-cat_parameters(iterations, design)
+```{r}
+mctable(out, wider = "statistic", format = "html")
 ```
+
 
 :::
 
@@ -217,7 +225,7 @@ cat_parameters(iterations, design)
 
 ::: panel-tabset
 
-## Percentage significant
+## Power plot
 
 ```{r}
 design <- design_template(
@@ -247,10 +255,17 @@ mcplot(out, var_x = 1, var_shape = 2, template = "power")
 
 ggsave(filename = "figure-trend-level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-mctable(out, wider = "statistic") %>% round(1)
+
 ```
 
-## Mean Tau-U
+## Power table
+
+```{r}
+mctable(out, wider = "statistic", format = "html", digits = 0)
+```
+
+
+## Tau plot
 
 ```{r}
 out <- create_mc("trend-level-tau.rds", 
@@ -261,15 +276,15 @@ mcplot(out, var_x = 1, var_shape = 2)
 
 ggsave(filename = "figure-trend-level-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-mctable(out, wider = "statistic") %>% round(2)
+
 ```
 
+## Tau table
 
-## Parameters
-
-```{r results='asis'}
-cat_parameters(iterations, design)
+```{r}
+mctable(out, wider = "statistic", format = "html")
 ```
+
 
 :::
 
@@ -277,7 +292,7 @@ cat_parameters(iterations, design)
 
 ::: panel-tabset
 
-## Percentage significant
+## Power plot
 
 ```{r}
 design <- design_template(
@@ -307,11 +322,18 @@ mcplot(out, var_x = 1, var_shape = 2, template = "power")
 
 ggsave(filename = "figure-trend-length.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-mctable(out, wider = "statistic") %>% round(1)
+
 
 ```
 
-## Mean Tau-U
+## Power table
+
+```{r}
+mctable(out, wider = "statistic", format = "html", digits = 0)
+```
+
+
+## Tau plot
 
 ```{r}
 out <- create_mc("trend-length-tau.rds", 
@@ -322,13 +344,13 @@ mcplot(out, var_x = 1, var_shape = 2)
 
 ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
-mctable(out, wider = "statistic") %>% round(2)
+
 ```
 
-## Parameters
+## Tau table
 
-```{r results='asis'}
-cat_parameters(iterations, design)
+```{r}
+mctable(out, wider = "statistic", format = "html")
 ```
 
 :::
