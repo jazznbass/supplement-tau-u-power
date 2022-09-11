@@ -130,6 +130,8 @@ ggsave(filename = "figure-phaselength.png", width = 18, height = 18,  device='pn
 ## Power table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html", digits = 0)
 ```
 
@@ -149,6 +151,8 @@ ggsave(filename = "figure-phaselength-tau.png", width = 18, height = 18,  device
 ## Tau table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html")
 ```
 
@@ -193,6 +197,8 @@ ggsave(filename = "figure-interventioneffect.png", width = 18, height = 18,  dev
 ## power table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html", digits = 0)
 ```
 
@@ -215,6 +221,8 @@ ggsave(filename = "figure-interventioneffect-tau.png", width = 18, height = 18, 
 ## Tau table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html")
 ```
 
@@ -261,6 +269,8 @@ ggsave(filename = "figure-trend-level.png", width = 18, height = 18,  device='pn
 ## Power table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html", digits = 0)
 ```
 
@@ -350,6 +360,8 @@ ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  devic
 ## Tau table
 
 ```{r}
+#| column: page
+
 mctable(out, wider = "statistic", format = "html")
 ```
 
