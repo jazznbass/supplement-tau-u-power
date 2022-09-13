@@ -13,12 +13,10 @@ format:
 comments:
   giscus:
     repo: jazznbass/supplement-tau-u-power
-    category: Announcements  
+    category: Announcements
     repo-id: R_kgDOHNsisg
     category-id: DIC_kwDOHNsiss4CRaCN
     mapping: pathname
-    
-    
 execute: 
   freeze: true
   warning: false
