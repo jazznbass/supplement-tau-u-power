@@ -10,9 +10,10 @@ format:
     toc-location: left
     self-contained: true
     code-fold: true
-comments:
-  utterances:
-    repo: jazznbass/supplement-tau-u-power
+comments: 
+  hypothesis:
+    theme: clean
+    openSidebar: false
 execute: 
   freeze: true
   warning: false
