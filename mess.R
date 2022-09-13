@@ -24,3 +24,21 @@ power_test(
 
 plot_mc(out, caption = FALSE) 
 out
+
+
+# ----------------
+
+
+# methods_p <- list(
+#   "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
+#   "Tau-U trendA" = get_mcfn("tau_u_trendA"), 
+#   "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB"), 
+#   "Tau-U adjusted" = get_mcfn("tau_u_base")
+# )
+# 
+# methods_es <- list(
+#   "Tau-U A vs. B" = get_mcfn("tau_u_AB_es"),
+#   "Tau-U trendA" = get_mcfn("tau_u_trendA_es"), 
+#   "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB_es"), 
+#   "Tau-U adjusted" = get_mcfn("tau_u_base_es")
+# )

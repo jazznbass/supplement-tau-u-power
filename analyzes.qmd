@@ -11,7 +11,8 @@ format:
     self-contained: true
     code-fold: true
 comments:
-  hypothesis: true
+  giscus:
+    repo: jazznbass/supplement-tau-u-power
 execute: 
   freeze: true
   warning: false
@@ -33,19 +34,6 @@ library(mcscan)
 # if necessary, install the following cran packages ahead
 library(scan)
 
-methods_p <- list(
-  "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
-  "Tau-U trendA" = get_mcfn("tau_u_trendA"), 
-  "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB"), 
-  "Tau-U adjusted" = get_mcfn("tau_u_base")
-)
-
-methods_es <- list(
-  "Tau-U A vs. B" = get_mcfn("tau_u_AB_es"),
-  "Tau-U trendA" = get_mcfn("tau_u_trendA_es"), 
-  "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB_es"), 
-  "Tau-U adjusted" = get_mcfn("tau_u_base_es")
-)
 
 create_mc <- function(filename, 
                       design, 
@@ -53,14 +41,12 @@ create_mc <- function(filename,
                       force_renew = FALSE,
                       eval, ...) {
   
-  if (eval == "p") {
-    eval_function <- get_mcfn("perc_sig")
-    methods <- methods_p
-  }
-  if (eval == "es") {
-    eval_function <- get_mcfn("mean")
-    methods <- methods_es
-  }
+  #force_renew <- TRUE
+  
+  #eval_function <- get_mcfn("pos_perc_sig")
+  
+  if (eval == "p") eval_function <- get_mcfn("pos_perc_sig")
+  if (eval == "es") eval_function <- get_mcfn("mean_es")
   
   if (file.exists(filename) && !force_renew) {
     out <- readRDS(filename)
@@ -68,7 +54,12 @@ create_mc <- function(filename,
     out <- mcstudy(
       design = design,
       iterations = iterations,
-      methods = methods,
+      methods = list(
+        "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
+        "Tau-U trendA" = get_mcfn("tau_u_trendA"), 
+        "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB"), 
+        "Tau-U adjusted" = get_mcfn("tau_u_base")
+      ),
       eval_function = eval_function,
       ...
     )
@@ -114,7 +105,7 @@ iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
   B_length = c(10, 15, 20, 30, 40, 50),
   statistic = c(0, 1),
-  n_sims = 500
+  n_sims = 1000
 )
 
 out <- create_mc("phaselength.rds", 
