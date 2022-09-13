@@ -12,7 +12,7 @@ format:
     code-fold: true
 comments:
   giscus:
-    repo: jazznbass/supplement-tau-u-power
+    repo: "jazznbass/supplement-tau-u-power"
 execute: 
   freeze: true
   warning: false
