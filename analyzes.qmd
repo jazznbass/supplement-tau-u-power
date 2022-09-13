@@ -12,7 +12,13 @@ format:
     code-fold: true
 comments:
   giscus:
-    repo: "jazznbass/supplement-tau-u-power"
+    repo: jazznbass/supplement-tau-u-power
+    category: Announcements  
+    repo-id: R_kgDOHNsisg
+    category-id: DIC_kwDOHNsiss4CRaCN
+    mapping: pathname
+    
+    
 execute: 
   freeze: true
   warning: false
