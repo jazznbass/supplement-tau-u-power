@@ -14,6 +14,8 @@ comments:
   hypothesis:
     theme: clean
     openSidebar: false
+  giscus: 
+    repo: jazznbass/supplement-tau-u-power
 execute: 
   freeze: true
   warning: false
