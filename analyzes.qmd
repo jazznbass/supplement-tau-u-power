@@ -36,6 +36,25 @@ library(mcscan)
 library(scan)
 
 
+tau_u_a_B <- function(x) {
+    res <- tau_u(
+      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    res[which(row.names(res) == "A vs. B"), which(names(res) == "p")]
+}
+
+tau_u_a_B_ta <- function(x) {
+    res <- tau_u(
+      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "p")]
+}
+
+tau_u_a_B_ta_tb <- function(x) {
+    res <- tau_u(
+      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "p")]
+  }
+
+
 create_mc <- function(filename, 
                       design, 
                       iterations, 
@@ -56,9 +75,9 @@ create_mc <- function(filename,
       design = design,
       iterations = iterations,
       methods = list(
-        "Tau-U A vs. B" = get_mcfn("tau_u_AB"),
-        "Tau-U trendA" = get_mcfn("tau_u_trendA"), 
-        "Tau-U trendA + trendB" = get_mcfn("tau_u_trendA_trendB"), 
+        "Tau-U A vs. B" = tau_u_a_B,
+        "Tau-U - trendA" = tau_u_a_B_ta, 
+        "Tau-U - trendA + trendB" = tau_u_a_B_ta_tb, 
         "Tau-U adjusted" = get_mcfn("tau_u_base")
       ),
       eval_function = eval_function,
