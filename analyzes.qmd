@@ -37,21 +37,27 @@ library(scan)
 
 
 tau_u_a_B <- function(x) {
-    res <- tau_u(
-      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    res[which(row.names(res) == "A vs. B"), which(names(res) == "p")]
+    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    list(
+      p = res[which(row.names(res) == "A vs. B"), which(names(res) == "p")],
+      es = res[which(row.names(res) == "A vs. B"), which(names(res) == "Tau")]
+    )
 }
 
 tau_u_a_B_ta <- function(x) {
-    res <- tau_u(
-      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "p")]
+    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    list(
+      p = res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "p")],
+      es = res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "Tau")]
+    )
 }
 
 tau_u_a_B_ta_tb <- function(x) {
-    res <- tau_u(
-      x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "p")]
+    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
+    list(
+      p = res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "p")],
+      es = res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "Tau")]
+    )
   }
 
 
@@ -123,7 +129,7 @@ design <- design_template(
 
 iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
-  B_length = c(10, 15, 20, 30, 40, 50),
+  B_length = c(5, 10, 15, 20, 30, 40, 50),
   statistic = c(0, 1),
   n_sims = 1000
 )
@@ -190,7 +196,7 @@ design <- design_template(
 
 iterations <- iterations_template(
   level_effect = c(0.25, 0.5, 0.75, 1, 1.25, 1.5),
-  length = c(15, 21, 27, 33, 39, 45),
+  length = c(9, 15, 21, 27, 33, 39, 45),
   statistic = c(0,1),
   n_sims = 1000
 )
@@ -329,7 +335,7 @@ design <- design_template(
 
 iterations <- list(
   trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
-  length = c(15, 21, 27, 33, 39, 45),
+  length = c(9, 15, 21, 27, 33, 39, 45),
   statistic = c(0,1),
   level_effect = 1,
   n_sims = 1000
