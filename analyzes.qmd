@@ -69,7 +69,7 @@ create_mc <- function(filename,
                       force_renew = FALSE,
                       eval, ...) {
   
-  force_renew <- TRUE
+  #force_renew <- TRUE
   
   if (file.exists(filename) && !force_renew) {
     out <- readRDS(filename)
@@ -127,7 +127,7 @@ iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
   B_length = c(5, 10, 15, 20, 30, 50),
   statistic = c(0, 1),
-  n_sims = 100
+  n_sims = 1000
 )
 
 out <- create_mc("phaselength.rds", 
@@ -259,7 +259,7 @@ out <- create_mc("trend-level.rds",
                  design, iterations,
                  force_renew = FALSE)
 
-mcplot(out, var_y = "es", var_x = 1, var_shape = 2, template = "power")
+mcplot(out, var_y = "p", var_x = 1, var_shape = 2, template = "power")
 
 ggsave(filename = "figure-trend-level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 
