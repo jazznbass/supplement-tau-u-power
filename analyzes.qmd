@@ -69,12 +69,7 @@ create_mc <- function(filename,
                       force_renew = FALSE,
                       eval, ...) {
   
-  #force_renew <- TRUE
-  
-  #eval_function <- get_mcfn("pos_perc_sig")
-  
-  if (eval == "p") eval_function <- get_mcfn("pos_perc_sig")
-  if (eval == "es") eval_function <- get_mcfn("mean_es")
+  force_renew <- TRUE
   
   if (file.exists(filename) && !force_renew) {
     out <- readRDS(filename)
@@ -88,7 +83,6 @@ create_mc <- function(filename,
         "Tau-U - trendA + trendB" = tau_u_a_B_ta_tb, 
         "Tau-U adjusted" = get_mcfn("tau_u_base")
       ),
-      eval_function = eval_function,
       ...
     )
     saveRDS(out, filename)
@@ -131,14 +125,13 @@ design <- design_template(
 
 iterations <- iterations_template(
   A_length = seq(3, 20, by = 2),
-  B_length = c(5, 10, 15, 20, 30, 40, 50),
+  B_length = c(5, 10, 15, 20, 30, 50),
   statistic = c(0, 1),
-  n_sims = 1000
+  n_sims = 100
 )
 
 out <- create_mc("phaselength.rds", 
                  design, iterations, 
-                 eval = "p",
                  force_renew = FALSE)
 
 mcplot(out, template = "power")
@@ -157,14 +150,8 @@ mctable(out, wider = "statistic", format = "html", digits = 0)
 ## Tau plot
 
 ```{r}
-out <- create_mc("phaselength-tau.rds", 
-                 design, iterations,
-                 force_renew = FALSE,
-                 eval = "es")
-
-mcplot(out)
+mcplot(out,var_y = "es")
 ggsave(filename = "figure-phaselength-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
-
 ```
 
 ## Tau table
@@ -172,7 +159,7 @@ ggsave(filename = "figure-phaselength-tau.png", width = 18, height = 18,  device
 ```{r}
 #| column: page
 
-mctable(out, wider = "statistic", format = "html")
+mctable(out, wider = "statistic", format = "html", var_y = "es")
 ```
 
 :::
@@ -204,7 +191,7 @@ iterations <- iterations_template(
 )
 
 out <- create_mc("interventioneffect-length.rds", 
-                 design, iterations, eval = "p",
+                 design, iterations,
                  force_renew = FALSE)
 
 mcplot(out, var_x = 2, var_shape = 1, template = "power")
@@ -225,15 +212,9 @@ mctable(out, wider = "statistic", format = "html", digits = 0)
 ## Tau plot
 
 ```{r}
-out <- create_mc("interventioneffect-length-tau.rds", 
-                 design, iterations, eval = "es",
-                 force_renew = FALSE)
-
-mcplot(out, var_x = 2, var_shape = 1)
+mcplot(out, var_y = "es", var_x = 2, var_shape = 1)
 
 ggsave(filename = "figure-interventioneffect-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1)
-
-
 
 ```
 
@@ -242,7 +223,7 @@ ggsave(filename = "figure-interventioneffect-tau.png", width = 18, height = 18, 
 ```{r}
 #| column: page
 
-mctable(out, wider = "statistic", format = "html")
+mctable(out, var_y = "es", wider = "statistic", format = "html")
 ```
 
 
@@ -275,13 +256,12 @@ iterations <- iterations_template(
 )
 
 out <- create_mc("trend-level.rds", 
-                 design, iterations, eval = "p",
+                 design, iterations,
                  force_renew = FALSE)
 
-mcplot(out, var_x = 1, var_shape = 2, template = "power")
+mcplot(out, var_y = "es", var_x = 1, var_shape = 2, template = "power")
 
 ggsave(filename = "figure-trend-level.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
-
 
 ```
 
@@ -297,21 +277,15 @@ mctable(out, wider = "statistic", format = "html", digits = 0)
 ## Tau plot
 
 ```{r}
-out <- create_mc("trend-level-tau.rds", 
-                 design, iterations, eval = "es",
-                 force_renew = FALSE)
-
-mcplot(out, var_x = 1, var_shape = 2)
+mcplot(out, var_y = "es", var_x = 1, var_shape = 2)
 
 ggsave(filename = "figure-trend-level-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
-
-
 ```
 
 ## Tau table
 
 ```{r}
-mctable(out, wider = "statistic", format = "html")
+mctable(out, var_y = "es", wider = "statistic", format = "html")
 ```
 
 
@@ -344,36 +318,27 @@ iterations <- list(
 )
 
 out <- create_mc("trend-length.rds", 
-                 design, iterations, eval = "p",
+                 design, iterations,
                  force_renew = FALSE)
 
-mcplot(out, var_x = 1, var_shape = 2, template = "power")
+mcplot(out, var_y = "es", var_x = 1, var_shape = 2, template = "power")
 
 ggsave(filename = "figure-trend-length.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
-
-
-
 ```
 
 ## Power table
 
 ```{r}
-mctable(out, wider = "statistic", format = "html", digits = 0)
+mctable(out, var_y = "es", wider = "statistic", format = "html", digits = 0)
 ```
 
 
 ## Tau plot
 
 ```{r}
-out <- create_mc("trend-length-tau.rds", 
-                 design, iterations, eval = "es",
-                 force_renew = FALSE)
-
-mcplot(out, var_x = 1, var_shape = 2)
+mcplot(out, var_y = "es", var_x = 1, var_shape = 2)
 
 ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
-
-
 ```
 
 ## Tau table
@@ -381,7 +346,7 @@ ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  devic
 ```{r}
 #| column: page
 
-mctable(out, wider = "statistic", format = "html")
+mctable(out, var_y = "es", wider = "statistic", format = "html")
 ```
 
 :::
