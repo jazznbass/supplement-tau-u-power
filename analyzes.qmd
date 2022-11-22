@@ -101,6 +101,7 @@ create_mc <- function(filename,
         "Tau-U adjusted" = tau_u_adj
       ),
       eval_function = evaluation,
+      rf_arguments = list(round = 0),
       ...
     )
     saveRDS(out, filename)
@@ -357,6 +358,67 @@ mctable(out, var_y = "p", wider = "statistic", format = "html", digits = 0)
 mcplot(out, var_y = "es", var_x = 1, var_shape = 2)
 
 ggsave(filename = "figure-trend-length-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+```
+
+## Tau table
+
+```{r}
+#| column: page
+
+mctable(out, var_y = "es", wider = "statistic", format = "html")
+```
+
+:::
+
+
+# Strength of trend effect and meassurement times (equal phase length)
+
+::: panel-tabset
+
+## Power plot
+
+```{r}
+design <- design_template(
+    n = n_sims,
+    start_value = 50,
+    s = 10,
+    level = level_effect * statistic,
+    trend = trend_effect / length,
+    slope = rnorm(n_sims, 0, 0.1 / (length * 2/3)),
+    phase_design = list(A = length * 1/2, B = length * 1/2),
+    distribution = "gaussian"
+)
+
+iterations <- list(
+  trend_effect = c(-0.5, -0.25, 0, +0.25, +0.5),
+  length = c(8, 12, 16, 22, 28, 34),
+  statistic = c(0,1),
+  level_effect = 1,
+  n_sims = 1000
+)
+
+out <- create_mc("trend-length-2.rds", 
+                 design, iterations,
+                 force_renew = FALSE)
+
+mcplot(out, var_x = 1, var_shape = 2, template = "power")
+
+ggsave(filename = "figure-trend-length-2.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
+```
+
+## Power table
+
+```{r}
+mctable(out, var_y = "p", wider = "statistic", format = "html", digits = 0)
+```
+
+
+## Tau plot
+
+```{r}
+mcplot(out, var_y = "es", var_x = 1, var_shape = 2)
+
+ggsave(filename = "figure-trend-length-2-tau.png", width = 18, height = 18,  device='png', units = "cm", dpi=300, scale = 1.1)
 ```
 
 ## Tau table
