@@ -43,44 +43,52 @@ library(scan)
 
 
 tau_u_a_B <- function(x) {
-    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    list(
-      p = res[which(row.names(res) == "A vs. B"), which(names(res) == "p")],
-      es = res[which(row.names(res) == "A vs. B"), which(names(res) == "Tau")]
-    )
+  res <- tau_u(
+    x, method = "parker", tau_method = "a", meta_method = "none"
+  )$table[[1]]
+  tau_version <- "A vs. B"
+  list(
+    p = res[which(row.names(res) == tau_version), which(names(res) == "p")],
+    es = res[which(row.names(res) == tau_version), which(names(res) == "Tau")]
+  )
 }
 
 tau_u_a_B_ta <- function(x) {
-    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    list(
-      p = res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "p")],
-      es = res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "Tau")]
-    )
+  res <- tau_u(
+    x, method = "parker", tau_method = "a", meta_method = "none"
+  )$table[[1]]
+  tau_version <- "A vs. B - Trend A"
+  list(
+    p = res[which(row.names(res) == tau_version), which(names(res) == "p")],
+    es = res[which(row.names(res) == tau_version), which(names(res) == "Tau")]
+  )
 }
 
 tau_u_a_B_ta_tb <- function(x) {
-    res <- tau_u(x, method = "parker", tau_method = "a", meta_method = "none")$table[[1]]
-    list(
-      p = res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "p")],
-      es = res[which(row.names(res) == "A vs. B + Trend B - Trend A"), which(names(res) == "Tau")]
-    )
-  }
+  res <- tau_u(
+    x, method = "parker", tau_method = "a", meta_method = "none"
+  )$table[[1]]
+  tau_version <- "A vs. B + Trend B - Trend A"
+  list(
+    p = res[which(row.names(res) == tau_version), which(names(res) == "p")],
+    es = res[which(row.names(res) == tau_version), which(names(res) == "Tau")]
+  )
+}
 
 
 tau_u_adj <- function(x) {
-    res <- corrected_tau(x, continuity = FALSE, repeated = FALSE)
-    list(p = res$p, es = res$tau)
+  res <- corrected_tau(x, continuity = FALSE, repeated = FALSE)
+  list(p = res$p, es = res$tau)
 }
 
 
 evaluation <- function(x) {
-
-    p <- unlist(lapply(x, function(y) {
-      if (y$es <= 0) y$p <- 1
-      y$p
-    }))
-    es <- unlist(lapply(x, function(y) y$es))
-    c(p = mean(p <= 0.05, na.rm = TRUE) * 100, es = mean(es, na.rm = TRUE))
+  p <- unlist(lapply(x, function(y) {
+    if (y$es <= 0) y$p <- 1
+    y$p
+  }))
+  es <- unlist(lapply(x, function(y) y$es))
+  c(p = mean(p <= 0.05, na.rm = TRUE) * 100, es = mean(es, na.rm = TRUE))
 }
 
 
