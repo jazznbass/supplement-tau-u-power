@@ -435,9 +435,13 @@ iterations <- list(
   n_sims = 5000
 )
 
-out <- create_mc("trend-length.rds", 
-                 design, iterations,
-                 force_renew = FALSE)
+out <- create_mc(
+  "trend-length.rds", 
+  design, 
+  iterations,
+  force_renew = FALSE
+)
+
 ```
 
 
